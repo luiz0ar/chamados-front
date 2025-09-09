@@ -1,0 +1,33 @@
+.breadcrumb-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.breadcrumb-link {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #ccc;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.breadcrumb-link:hover {
+  color: #fff;
+}
+
+.breadcrumb-active {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.breadcrumb-separator {
+  font-size: 2rem;
+  font-weight: 300;
+  color: #ccc;
+  padding-bottom: 5px;
+}

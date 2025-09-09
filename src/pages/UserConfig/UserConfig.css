@@ -1,0 +1,69 @@
+.user-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.status-indicator.active {
+  background-color: #00e676;
+}
+
+.status-indicator.inactive {
+  background-color: #e53e3e;
+}
+
+.table-container {
+  width: 100%;
+  overflow: auto;
+  flex-grow: 1;
+  min-height: 0;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table thead, .data-table tbody tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.data-table thead {
+  flex-shrink: 0;
+}
+
+.data-table tbody {
+  display: block;
+  flex-grow: 1;
+  overflow-y: auto;
+}
+
+.table-container {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) rgba(0, 0, 0, 0.2);
+}
+
+.table-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
