@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import api from '../../resources/mock';
+import api from '../../resources/api';
 import Header from '../../Components/Header/Header';
 import Breadcrumb from '../../Components/Breadcrumb/Breadcrumb';
-import StyledSelect from '../../Components/StyledSelect/StyledSelect';  
+import StyledSelect from '../../Components/StyledSelect/StyledSelect';
 import { FaEdit, FaTrash, FaPlus, FaSearch } from 'react-icons/fa';
 import './UserConfig.css';
 
@@ -46,7 +46,7 @@ const UserConfig: React.FC = () => {
           navigate('/inicio');
           return;
         }
-        
+
         const [usersResponse, departmentsResponse] = await Promise.all([
           api.get('/users'),
           api.get('/departments')
@@ -71,7 +71,7 @@ const UserConfig: React.FC = () => {
     users.filter(user => {
       const searchMatch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           user.email.toLowerCase().includes(searchTerm.toLowerCase());
-      
+
       const departmentMatch = !selectedDepartment || selectedDepartment.value === 'all' || user.department.id === selectedDepartment.value;
 
       return searchMatch && departmentMatch;
@@ -90,15 +90,13 @@ const UserConfig: React.FC = () => {
 
   return (
     <div className="home-container">
-      <Header userName={loggedInUser.name} imageUrl={loggedInUser.image_url} />
+      <Header imageUrl={loggedInUser.image_url} />
       <main className="configs-content">
         <Breadcrumb items={breadcrumbItems} />
-
         <section className="crud-area">
           <div className="crud-header">
             <h2 className='sub-title'>Usuários do Sistema</h2>
             <div className="search-and-add">
-              
               <div className="styled-select-wrapper">
                 <StyledSelect
                   placeholder="Filtrar por departamento..."
@@ -109,7 +107,6 @@ const UserConfig: React.FC = () => {
                   showAllOption
                 />
               </div>
-
               <div className="search-container-configs">
                 <FaSearch className="search-icon-configs" />
                 <input
@@ -120,7 +117,7 @@ const UserConfig: React.FC = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <button className="add-button" onClick={() => navigate('/gerenciar-usuarios/adicionar')}>
+              <button className="add-button" onClick={() => navigate('/adicionar-usuarios')}>
                 <FaPlus />
               </button>
             </div>
@@ -147,15 +144,15 @@ const UserConfig: React.FC = () => {
                       <td>{user.department?.name || 'N/A'}</td>
                       <td>
                         <div className="actions-cell">
-                          <button 
-                            className="action-button edit" 
-                            onClick={() => navigate(`/gerenciar-usuarios/editar/${user.id}`)}
+                          <button
+                            className="action-button edit"
+                            onClick={() => navigate(`/editar-usuario/${user.id}`)}
                             data-tooltip-id="app-tooltip"
                             data-tooltip-content="Editar Usuário">
                               <FaEdit />
                           </button>
-                          <button 
-                            className="action-button delete" 
+                          <button
+                            className="action-button delete"
                             onClick={() => alert(`Excluir usuário ${user.id}`)}
                             data-tooltip-id="app-tooltip"
                             data-tooltip-content="Excluir Usuário"

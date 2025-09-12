@@ -65,26 +65,3 @@
   padding-top: 1.5rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
-
-.btn-services-button{
-  flex: 1;
-  padding: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
-  background-color: transparent;
-  color: white;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  transition: border 0.3s ease;
-}
-
-.btn-services-button:hover {
-  border: 1px solid rgba(100, 150, 255, 1);
-  color: rgba(100, 150, 255);
-}
-

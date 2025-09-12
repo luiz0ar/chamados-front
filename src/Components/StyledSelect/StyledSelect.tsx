@@ -17,6 +17,7 @@ interface StyledSelectProps {
   isMulti?: boolean;
   showAllOption?: boolean;
   isClearable?: boolean;
+  isDisabled?: boolean;
 }
 
 const CustomMultiValueRemove = (props: any) => {
@@ -36,7 +37,7 @@ const CustomClearIndicator = (props: any) => {
   return (
     <div
       data-tooltip-id="app-tooltip"
-      data-tooltip-content="Limpar seleção"
+      data-tooltip-content="Limpar Seleção"
     >
       <components.ClearIndicator {...props} />
     </div>
@@ -50,7 +51,8 @@ const StyledSelect: React.FC<StyledSelectProps> = ({
   placeholder,
   isMulti = false,
   showAllOption = false,
-  isClearable = false
+  isClearable = false,
+  isDisabled = false
 }) => {
   const [displayValue, setDisplayValue] = useState(value);
 
@@ -84,7 +86,7 @@ const StyledSelect: React.FC<StyledSelectProps> = ({
       const allOptionValue = 'all';
       const isAllSelected = selectedOption.some(opt => opt.value === allOptionValue);
       const wasAllPreviouslySelected = Array.isArray(value) && value.length === options.length;
-      
+
       if (isAllSelected && !wasAllPreviouslySelected) {
         onChange(options);
         setDisplayValue(options);
@@ -95,7 +97,7 @@ const StyledSelect: React.FC<StyledSelectProps> = ({
         return;
       }
     }
-    
+
     setDisplayValue(selectedOption);
     onChange(selectedOption);
   };
@@ -113,6 +115,7 @@ const StyledSelect: React.FC<StyledSelectProps> = ({
         noOptionsMessage={() => 'Nenhuma opção encontrada'}
         isMulti={isMulti}
         isClearable={isClearable}
+        isDisabled={isDisabled}
         components={{
           MultiValueRemove: CustomMultiValueRemove,
           ClearIndicator: CustomClearIndicator

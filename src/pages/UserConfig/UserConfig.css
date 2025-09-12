@@ -19,20 +19,20 @@
 }
 
 .table-container {
-  width: 100%;
+  flex: 1;
   overflow: auto;
   flex-grow: 1;
   min-height: 0;
 }
 
 .data-table {
-  width: 100%;
+  flex: 1;
   border-collapse: collapse;
 }
 
 .data-table thead, .data-table tbody tr {
   display: table;
-  width: 100%;
+  flex: 1;
   table-layout: fixed;
 }
 

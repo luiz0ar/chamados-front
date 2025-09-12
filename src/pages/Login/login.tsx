@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import "./login.css";
 import { FaUser, FaLock, FaEye, FaEyeSlash, FaSpinner } from "react-icons/fa";
 import { VscAzure } from "react-icons/vsc";
-import api from "../../resources/mock";
+import api from "../../resources/api";
 import logoMinasul from "/assets/horizontal-borda.png";
 import backgroundCafe from "/assets/background-min.jpg";
+import "./login.css";
 
 type InputFieldProps = {
   type: string;

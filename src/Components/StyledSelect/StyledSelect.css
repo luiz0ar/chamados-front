@@ -18,7 +18,7 @@
 
 .react-select-container .react-select__single-value,
 .react-select-container .react-select__input-container {
-  color: #fff !important;
+  color: white !important;
 }
 
 .react-select-container .react-select__placeholder {

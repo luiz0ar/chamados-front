@@ -9,16 +9,19 @@ import Breadcrumb from '../../Components/Breadcrumb/Breadcrumb';
 import CrudModal from '../../Components/CrudModal/CrudModal';
 import ConfirmModal from '../../Components/ConfirmModal/ConfirmModal';
 import Header from '../../Components/Header/Header';
+import ServicesModal from '../../Components/ServiceModal/ServiceModal';
 
 interface CrudItem {
   id: number;
   name: string;
+  services?: { id: number, name: string }[];
 }
 
 interface User {
   id: number;
   name: string;
   roles: { name: string }[];
+  image_url: string | null;
 }
 
 const TABS = [
@@ -26,8 +29,8 @@ const TABS = [
   { key: 'form-of-services', label: 'Formas de Atendimento' },
   { key: 'form-of-requests', label: 'Formas de Solicitação' },
   { key: 'causes', label: 'Causa' },
-  { key: 'doubts', label: 'Dúvida' },
-  { key: 'states', label: 'Estado' },
+  { key: 'queues', label: 'Filas' },
+  { key: 'states', label: 'Estados' },
   { key: 'departments', label: 'Departamentos' },
   { key: 'categories', label: 'Categorias' },
   { key: 'services', label: 'Serviços' },
@@ -44,6 +47,8 @@ const GlobalConfigs: React.FC = () => {
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [user, setUser] = useState<User | null>(null);
+  const [allServices, setAllServices] = useState<{ id: number, name: string }[]>([]);
+  const [isServicesModalOpen, setIsServicesModalOpen] = useState(false);
 
   useEffect(() => {
     const checkUserRole = async () => {
@@ -53,7 +58,6 @@ const GlobalConfigs: React.FC = () => {
         setUser(userData);
 
         const isAdmin = userData.roles.some(role => role.name === 'ADMIN');
-
         if (!isAdmin) {
           toast.error("Você não tem permissão para acessar esta página.");
           navigate('/inicio');
@@ -63,7 +67,6 @@ const GlobalConfigs: React.FC = () => {
         navigate('/login');
       }
     };
-
     checkUserRole();
   }, [navigate]);
 
@@ -86,6 +89,18 @@ const GlobalConfigs: React.FC = () => {
       fetchData();
     }
   }, [activeTab, user]);
+
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const response = await api.get('/services');
+        setAllServices(response.data.data || response.data || []);
+      } catch (error) {
+        toast.error("Não foi possível carregar a lista de serviços.");
+      }
+    };
+    fetchServices();
+  }, []);
 
   const handleAddItem = () => {
     setIsModalOpen(true);
@@ -117,6 +132,32 @@ const GlobalConfigs: React.FC = () => {
     setItemToEdit(item);
     setIsModalOpen(true);
   };
+
+  const handleServicesClick = () => {
+    setIsServicesModalOpen(true);
+  };
+
+const handleSaveQueueServices = async (selectedServices: any[]) => {
+  if (!itemToEdit) return;
+  setIsActionLoading(true);
+  try {
+    const serviceIds = selectedServices.map(s => s.value);
+    await api.post(`/queues/${itemToEdit.id}/services`, { services: serviceIds });
+    const updatedItem = {
+      ...itemToEdit,
+      services: selectedServices.map(s => ({ id: s.value, name: s.label }))
+    };
+    setData(data.map(item => item.id === itemToEdit.id ? updatedItem : item));
+    setItemToEdit(updatedItem);
+
+    toast.success("Serviços associados com sucesso!");
+    setIsServicesModalOpen(false);
+  } catch (error) {
+    toast.error("Não foi possível associar os serviços.");
+  } finally {
+    setIsActionLoading(false);
+  }
+};
 
   const openDeleteModal = (item: CrudItem) => {
     setItemToDelete(item);
@@ -155,7 +196,7 @@ const GlobalConfigs: React.FC = () => {
 
   return (
     <div className="home-container">
-      <Header />
+      <Header imageUrl={user.image_url} />
       <main className="configs-content">
         <Breadcrumb items={breadcrumbItems} />
         <nav className="tabs-container">
@@ -180,7 +221,7 @@ const GlobalConfigs: React.FC = () => {
                   placeholder={`Pesquisar em ${activeTab.label}...`}
                   className="search-input-configs"
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => setSearchTerm(e.target.value.toUpperCase())}
                 />
               </div>
               <button className="add-button" onClick={handleAddItem}>
@@ -225,9 +266,11 @@ const GlobalConfigs: React.FC = () => {
         isOpen={isModalOpen}
         onClose={() => { setIsModalOpen(false); setItemToEdit(null); }}
         onSave={handleSaveItem}
-        title={itemToEdit ? `Editar ${activeTab.label.slice(0, -1)}` : `Adicionar ${activeTab.label.slice(0, -1)}`}
+        title={`${itemToEdit ? 'Editar' : 'Adicionar'} ${activeTab.label.endsWith('s') ? activeTab.label.slice(0, -1) : activeTab.label}`}
         isLoading={isActionLoading}
         currentItem={itemToEdit}
+        showServicesButton={activeTab.key === 'queues' && !!itemToEdit}
+        onServicesClick={handleServicesClick}
       />
       <ConfirmModal
         isOpen={!!itemToDelete}
@@ -235,6 +278,14 @@ const GlobalConfigs: React.FC = () => {
         onConfirm={confirmDeleteItem}
         title="Confirmar Exclusão"
         message={`Você tem certeza que deseja excluir o item "${itemToDelete?.name}"? Esta ação não pode ser desfeita.`}
+        isLoading={isActionLoading}
+      />
+      <ServicesModal
+        isOpen={isServicesModalOpen}
+        onClose={() => setIsServicesModalOpen(false)}
+        onSave={handleSaveQueueServices}
+        allServices={allServices.map(s => ({ value: s.id, label: s.name }))}
+        initialSelectedServices={itemToEdit?.services?.map(s => ({ value: s.id, label: s.name })) || []}
         isLoading={isActionLoading}
       />
     </div>

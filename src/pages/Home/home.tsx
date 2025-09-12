@@ -90,12 +90,12 @@ const Home: React.FC = () => {
   }, [user]);
 
   if (!user) {
-    return <div className="loading-container">Carregando...</div>; 
+    return <div className="loading-container">Carregando...</div>;
   }
 
   return (
     <div className="home-container">
-      <Header userName={user.name} imageUrl={user.image_url} />
+      <Header imageUrl={user.image_url} />
 
       <main className="home-content">
         <header className="welcome-header">

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './CrudModal.css';
-import { FaSpinner, FaTimes } from 'react-icons/fa';
+import { FaSpinner, FaTimes, FaCog } from 'react-icons/fa';
 
 interface CrudItem {
   id: number;
@@ -10,25 +10,32 @@ interface CrudItem {
 interface CrudModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (name: string) => Promise<void>;
+  onSave: (name: string) => Promise<any>;
   title: string;
   isLoading: boolean;
   currentItem?: CrudItem | null;
+  showServicesButton?: boolean;
+  onServicesClick?: () => void;
 }
 
-const CrudModal: React.FC<CrudModalProps> = ({ isOpen, onClose, onSave, title, isLoading, currentItem }) => {
+const CrudModal: React.FC<CrudModalProps> = ({
+  isOpen,
+  onClose,
+  onSave,
+  title,
+  isLoading,
+  currentItem,
+  showServicesButton = false,
+  onServicesClick
+}) => {
   const [itemName, setItemName] = useState('');
-
-  const handleSave = async () => {
-    if (isLoading || !itemName.trim()) return;
-    await onSave(itemName);
-  };
 
   useEffect(() => {
     if (isOpen) {
       setItemName(currentItem?.name || '');
     }
   }, [isOpen, currentItem]);
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -39,13 +46,20 @@ const CrudModal: React.FC<CrudModalProps> = ({ isOpen, onClose, onSave, title, i
         handleSave();
       }
     };
+
     if (isOpen) {
       window.addEventListener('keydown', handleKeyDown);
     }
+
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, onClose, itemName, isLoading]);
+  }, [isOpen, onClose, itemName, isLoading, onSave]);
+
+  const handleSave = async () => {
+    if (isLoading || !itemName.trim()) return;
+    await onSave(itemName);
+  };
 
   if (!isOpen) {
     return null;
@@ -65,7 +79,7 @@ const CrudModal: React.FC<CrudModalProps> = ({ isOpen, onClose, onSave, title, i
                 type="text"
                 className="login-input"
                 placeholder="Nome do item"
-                value={itemName}
+                value={itemName.toUpperCase()}
                 onChange={(e) => setItemName(e.target.value)}
                 autoFocus
               />
@@ -73,6 +87,12 @@ const CrudModal: React.FC<CrudModalProps> = ({ isOpen, onClose, onSave, title, i
           </div>
         </div>
         <div className="modal-footer">
+          {showServicesButton && (
+            <button className="btn-services-button" onClick={onServicesClick}>
+              <FaCog /> Serviços
+            </button>
+          )}
+          <div style={{ flex: 1 }}></div>
           <button className="btn-cancel" onClick={onClose}>Cancelar</button>
           <button className="btn-confirm" onClick={handleSave} disabled={isLoading || !itemName.trim()}>
             {isLoading ? <FaSpinner className="spinner" /> : 'Salvar'}

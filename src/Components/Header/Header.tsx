@@ -6,11 +6,10 @@ import logoMinasul from '/assets/logo-branca-cima.png';
 import { FaBell, FaSignOutAlt, FaUserCircle } from 'react-icons/fa';
 
 interface HeaderProps {
-  userName: string;
   imageUrl?: string | null;
 }
 
-const Header: React.FC<HeaderProps> = ({ userName, imageUrl }) => {
+const Header: React.FC<HeaderProps> = ({ imageUrl }) => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -33,7 +32,7 @@ const Header: React.FC<HeaderProps> = ({ userName, imageUrl }) => {
         <div className="header-icons">
           <FaBell title="Notificações" className="bell-icon" />
            {imageUrl ? (
-            <img src={imageUrl} alt={userName} title="Meu Perfil" className="header-profile-pic" />
+            <img src={imageUrl} title="Meu Perfil" className="header-profile-pic" />
           ) : (
             <FaUserCircle title="Meu Perfil" />
           )}
