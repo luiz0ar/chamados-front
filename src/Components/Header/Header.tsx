@@ -3,9 +3,14 @@ import { useNavigate, Link } from 'react-router-dom';
 import './Header.css';
 import api from '../../resources/api';
 import logoMinasul from '/assets/logo-branca-cima.png';
-import { FaBell, FaSignOutAlt, FaUser } from 'react-icons/fa';
+import { FaBell, FaSignOutAlt, FaUserCircle } from 'react-icons/fa';
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  userName: string;
+  imageUrl?: string | null;
+}
+
+const Header: React.FC<HeaderProps> = ({ userName, imageUrl }) => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -27,12 +32,16 @@ const Header: React.FC = () => {
       <div className="header-actions">
         <div className="header-icons">
           <FaBell title="Notificações" className="bell-icon" />
+           {imageUrl ? (
+            <img src={imageUrl} alt={userName} title="Meu Perfil" className="header-profile-pic" />
+          ) : (
+            <FaUserCircle title="Meu Perfil" />
+          )}
           <FaSignOutAlt
             title="Sair"
             className="logout-icon"
             onClick={handleLogout}
           />
-          <FaUser />
         </div>
       </div>
     </nav>

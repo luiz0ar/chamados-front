@@ -138,8 +138,8 @@ const GlobalConfigs: React.FC = () => {
   };
 
   const breadcrumbItems = [
-    { label: 'Início', path: '/inicio' },
-    { label: 'Configurações Gerais', path: '/configs' }
+    { label: 'INÍCIO', path: '/inicio' },
+    { label: 'CONFIGURAÇÕES GERAIS', path: '/configs' }
   ];
 
   const filteredData = useMemo(() =>

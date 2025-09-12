@@ -23,3 +23,89 @@
   margin-bottom: 1rem;
   color: white;
 }
+
+
+.btn-confirm {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  background-color: transparent;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  transition: border-color 0.4s ease;
+  transition: border-color 0.3s ease;
+}
+
+.btn-confirm:hover {
+  border-color:rgb(0, 161, 86);
+  color: rgb(0, 161, 86);
+}
+
+.btn-confirm:disabled {
+  border-color: #a0aec0;
+  cursor: not-allowed;
+}
+
+.btn-cancel {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  background-color: transparent;
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  transition: border-color 0.4s ease;
+  transition: color 0.3s ease;
+}
+
+.btn-cancel:hover {
+  border-color: rgb(161, 0, 0);
+  color: rgb(161, 0, 0);
+}
+
+.btn-cancel:disabled {
+  border-color: #a0aec0;
+  cursor: not-allowed;
+}
+
+.search-input-configs {
+  padding: 0.8rem 1rem 0.8rem 2.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.3);
+  color: #fff;
+  font-size: 0.9rem;
+  min-width: 250px;
+  box-sizing: border-box;
+  height: 45px;
+}
+
+.search-container-configs {
+  position: relative;
+}
+
+.search-input-configs::placeholder {
+  color: rgb(0, 161, 86);
+}
+
+.search-icon-configs {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  color: #ccc;
+}

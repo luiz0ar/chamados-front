@@ -9,9 +9,10 @@ import { FaWpforms, FaGears } from "react-icons/fa6";
 import { BsDatabaseFill } from "react-icons/bs";
 import { IoAnalyticsSharp } from "react-icons/io5";
 
-interface User {
+interface LoggedInUser {
   id: number;
   name: string;
+  image_url: string | null;
   roles: { name: string }[];
 }
 
@@ -61,7 +62,7 @@ const allActionItems = [
 ];
 
 const Home: React.FC = () => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<LoggedInUser | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -76,6 +77,7 @@ const Home: React.FC = () => {
     };
     fetchUserData();
   }, [navigate]);
+
   const visibleActionItems = useMemo(() => {
     if (!user) {
       return [];
@@ -86,20 +88,26 @@ const Home: React.FC = () => {
     }
     return allActionItems.filter(item => !item.adminOnly);
   }, [user]);
-  const userName = user ? user.name : "Usuário";
+
+  if (!user) {
+    return <div className="loading-container">Carregando...</div>; 
+  }
+
   return (
     <div className="home-container">
-      <Header />
+      <Header userName={user.name} imageUrl={user.image_url} />
 
       <main className="home-content">
         <header className="welcome-header">
-          <h1>Olá, {userName}.</h1>
+          <h1>Olá, {user.name}.</h1>
           <p>Como podemos te ajudar hoje?</p>
         </header>
+
         <div className="search-container">
           <FaSearch className="search-icon" />
           <input type="text" placeholder="Pesquise por chamados, artigos ou relatórios..." className="search-input" />
         </div>
+
         <section className="action-grid">
           {visibleActionItems.map((item, index) => (
             <Link to={item.link} key={index} className="action-card">

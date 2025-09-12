@@ -5,6 +5,7 @@ import ForgotPassword from '../pages/RecuperarForm/form';
 import ResetPassword from '../pages/ResetPassword/ResetPassword';
 import GlobalConfigs from '../pages/GlobalConfigs/GlobalConfigs';
 import UserConfig from '../pages/UserConfig/UserConfig';
+import EditUser from '../pages/EditUser/EditUser';
 
 export const AppRoutes = () => {
   return (
@@ -15,6 +16,7 @@ export const AppRoutes = () => {
       <Route path="/redefinir-senha/:token" element={<ResetPassword />} />
       <Route path="/configuracoes" element={<GlobalConfigs />} />
       <Route path="/gerenciar-usuarios" element={<UserConfig />} />
+      <Route path="/editar-usuario/:id" element={<EditUser />} />
       <Route path="*" element={<Login />} />
     </Routes>
   );

@@ -1,7 +1,9 @@
 import React from 'react';
 import { AppRoutes } from './routes';
 import { ToastContainer } from 'react-toastify';
+import { Tooltip } from 'react-tooltip';
 import 'react-toastify/dist/ReactToastify.css';
+import 'react-tooltip/dist/react-tooltip.css';
 
 function App() {
   return (
@@ -19,6 +21,7 @@ function App() {
         pauseOnHover
         theme="dark"
       />
+      <Tooltip id="app-tooltip" /> 
     </React.StrictMode>
   );
 }

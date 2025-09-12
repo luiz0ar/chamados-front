@@ -1,28 +1,25 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import api from '../../resources/api';
+import api from '../../resources/mock';
 import Header from '../../Components/Header/Header';
 import Breadcrumb from '../../Components/Breadcrumb/Breadcrumb';
-
-import './UserConfig.css';
-import '../GlobalConfigs/GlobalConfigs.css';
-
+import StyledSelect from '../../Components/StyledSelect/StyledSelect';  
 import { FaEdit, FaTrash, FaPlus, FaSearch } from 'react-icons/fa';
+import './UserConfig.css';
 
 interface UserFromApi {
   id: number;
   name: string;
   email: string;
   department: { id: number, name: string };
-  roles: { id: number, name: string }[];
-  is_active: 1 | 0;
 }
 
 interface LoggedInUser {
   id: number;
   name: string;
   roles: { name: string }[];
+  image_url: string | null;
 }
 
 const UserConfig: React.FC = () => {
@@ -32,8 +29,11 @@ const UserConfig: React.FC = () => {
   const [loggedInUser, setLoggedInUser] = useState<LoggedInUser | null>(null);
   const navigate = useNavigate();
 
+  const [departments, setDepartments] = useState<{ id: number, name: string }[]>([]);
+  const [selectedDepartment, setSelectedDepartment] = useState<any>(null);
+
   useEffect(() => {
-    const checkUserRoleAndFetchData = async () => {
+    const initializePage = async () => {
       setIsLoading(true);
       try {
         const meResponse = await api.get('/me');
@@ -46,33 +46,42 @@ const UserConfig: React.FC = () => {
           navigate('/inicio');
           return;
         }
+        
+        const [usersResponse, departmentsResponse] = await Promise.all([
+          api.get('/users'),
+          api.get('/departments')
+        ]);
 
-        // Altere para uma rota que retorne TODOS os usuários, se necessário
-        const usersResponse = await api.get('/users');
-        setUsers(usersResponse.data || []);
+        setUsers(usersResponse.data.data || usersResponse.data || []);
+        setDepartments(departmentsResponse.data.data || departmentsResponse.data || []);
 
       } catch (error) {
-        console.error("Erro de autenticação ou ao buscar dados:", error);
+        console.error("Erro ao inicializar página:", error);
+        toast.error("Sessão expirada ou erro de autenticação.");
         navigate('/login');
       } finally {
         setIsLoading(false);
       }
     };
 
-    checkUserRoleAndFetchData();
+    initializePage();
   }, [navigate]);
 
   const filteredUsers = useMemo(() =>
-    users.filter(user =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase())
-    ),
-    [users, searchTerm]
+    users.filter(user => {
+      const searchMatch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          user.email.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const departmentMatch = !selectedDepartment || selectedDepartment.value === 'all' || user.department.id === selectedDepartment.value;
+
+      return searchMatch && departmentMatch;
+    }),
+    [users, searchTerm, selectedDepartment]
   );
 
   const breadcrumbItems = [
-    { label: 'Início', path: '/inicio' },
-    { label: 'Gerenciar Usuários', path: '/gerenciar-usuarios' }
+    { label: 'INÍCIO', path: '/inicio' },
+    { label: 'GERENCIAR USUÁRIOS', path: '/gerenciar-usuarios' }
   ];
 
   if (!loggedInUser) {
@@ -81,7 +90,7 @@ const UserConfig: React.FC = () => {
 
   return (
     <div className="home-container">
-      <Header />
+      <Header userName={loggedInUser.name} imageUrl={loggedInUser.image_url} />
       <main className="configs-content">
         <Breadcrumb items={breadcrumbItems} />
 
@@ -89,6 +98,18 @@ const UserConfig: React.FC = () => {
           <div className="crud-header">
             <h2 className='sub-title'>Usuários do Sistema</h2>
             <div className="search-and-add">
+              
+              <div className="styled-select-wrapper">
+                <StyledSelect
+                  placeholder="Filtrar por departamento..."
+                  options={departments.map(dep => ({ value: dep.id, label: dep.name }))}
+                  value={selectedDepartment}
+                  onChange={(option) => setSelectedDepartment(option)}
+                  isClearable
+                  showAllOption
+                />
+              </div>
+
               <div className="search-container-configs">
                 <FaSearch className="search-icon-configs" />
                 <input
@@ -99,7 +120,7 @@ const UserConfig: React.FC = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <button className="add-button" onClick={() => alert('Abrir modal de adição de usuário')}>
+              <button className="add-button" onClick={() => navigate('/gerenciar-usuarios/adicionar')}>
                 <FaPlus />
               </button>
             </div>
@@ -112,44 +133,39 @@ const UserConfig: React.FC = () => {
                   <th>Nome</th>
                   <th>E-mail</th>
                   <th>Departamento</th>
-                  <th>Perfil</th>
-                  <th>Status</th>
                   <th style={{ textAlign: 'center' }}>Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
-                  <tr><td colSpan={6}><p className='loading-text'>Carregando...</p></td></tr>
+                  <tr><td colSpan={4}><p className='loading-text'>Carregando...</p></td></tr>
                 ) : (
-                  filteredUsers.map(user => {
-                    const statusText = user.is_active ? 'Ativo' : 'Inativo';
-                    const profileName = user.roles.length > 0 ? user.roles[0].name : 'N/A';
-
-                    return (
-                      <tr key={user.id}>
-                        <td>{user.name}</td>
-                        <td>{user.email}</td>
-                        <td>{user.department?.name || 'N/A'}</td>
-                        <td>{profileName}</td>
-                        <td>
-                          <div className="user-status">
-                            <span className={`status-indicator ${statusText === 'Ativo' ? 'active' : 'inactive'}`}></span>
-                            {statusText}
-                          </div>
-                        </td>
-                        <td>
-                          <div className="actions-cell">
-                            <button className="action-button edit" onClick={() => alert(`Editar usuário ${user.id}`)}>
-                              <FaEdit title="Editar" />
-                            </button>
-                            <button className="action-button delete" onClick={() => alert(`Excluir usuário ${user.id}`)}>
-                              <FaTrash title="Excluir" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
+                  filteredUsers.map(user => (
+                    <tr key={user.id}>
+                      <td>{user.name}</td>
+                      <td>{user.email}</td>
+                      <td>{user.department?.name || 'N/A'}</td>
+                      <td>
+                        <div className="actions-cell">
+                          <button 
+                            className="action-button edit" 
+                            onClick={() => navigate(`/gerenciar-usuarios/editar/${user.id}`)}
+                            data-tooltip-id="app-tooltip"
+                            data-tooltip-content="Editar Usuário">
+                              <FaEdit />
+                          </button>
+                          <button 
+                            className="action-button delete" 
+                            onClick={() => alert(`Excluir usuário ${user.id}`)}
+                            data-tooltip-id="app-tooltip"
+                            data-tooltip-content="Excluir Usuário"
+                          >
+                            <FaTrash />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
                 )}
               </tbody>
             </table>

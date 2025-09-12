@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import "./login.css";
 import { FaUser, FaLock, FaEye, FaEyeSlash, FaSpinner } from "react-icons/fa";
 import { VscAzure } from "react-icons/vsc";
-import api from "../../resources/api";
+import api from "../../resources/mock";
 import logoMinasul from "/assets/horizontal-borda.png";
 import backgroundCafe from "/assets/background-min.jpg";
 
