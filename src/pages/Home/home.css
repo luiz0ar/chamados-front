@@ -12,10 +12,12 @@
   right: 0;
   bottom: 0;
   z-index: -1;
-  background-image: url('/assets/background-min.jpg');
+  /* background-color: rgb(240, 240, 240); */
+  background-color: rgb(35, 35, 35);
+  /* background-image: url('/assets/background-min.jpg'); */
   background-size: cover;
   background-position: center;
-  filter: blur(10px) brightness(0.7);
+  filter: blur(0px) brightness(0.8);
 }
 
 .header {
@@ -52,17 +54,15 @@
   color: white;
 }
 
-/* ESTILO PADRÃO (sem o widget) */
 .home-layout-default {
   padding: 120px 2rem 2rem;
   max-width: 1200px;
   margin: 0 auto;
 }
 
-/* NOVO LAYOUT DINÂMICO (COM O WIDGET) */
 .home-layout-with-widget {
   display: grid;
-  grid-template-columns: 1fr 320px; /* Conteúdo principal flexível, widget com largura fixa */
+  grid-template-columns: 1fr 320px;
   grid-template-rows: auto auto 1fr;
   gap: 2rem;
 
@@ -71,7 +71,6 @@
   margin: 0 auto;
 }
 
-/* Posicionando os elementos no Grid */
 .home-layout-with-widget .main-content-area {
   grid-column: 1 / 2;
   grid-row: 1 / 4;
@@ -87,8 +86,8 @@
   min-height: 450px;
 }
 
-.welcome-header h1 {
-  font-size: 2.5rem;
+.welcome-header {
+  font-size: 1.5rem;
   font-weight: 600;
   text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
   color: white;

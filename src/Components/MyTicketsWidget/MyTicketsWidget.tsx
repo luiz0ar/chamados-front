@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import './MyTicketsWidget.css';
 import { FaEye } from 'react-icons/fa';
+import { Tooltip } from 'react-tooltip';
 
 interface AssignedTicket {
   id: number;
@@ -27,14 +28,14 @@ const MyTicketsWidget: React.FC<Props> = ({ tickets, services }) => {
   return (
     <aside className="assigned-tickets-widget">
       <header className="assigned-widget-header">
-        <h3>Meus Chamados Atribuídos</h3>
+        <h3>Aguardando Atendimento</h3>
         <span className="assigned-ticket-count-badge">{tickets.length}</span>
       </header>
       <div className="assigned-widget-content">
         <ul className="assigned-ticket-list">
           {tickets.map(ticket => (
             <li key={ticket.id}>
-              <Link to={`/chamado/${ticket.id}`} className="assigned-ticket-item">
+              <Link to={`/tickets/${ticket.id}`} className="assigned-ticket-item">
                 <span className="assigned-ticket-info">
                   <span className="assigned-ticket-id">#{ticket.id}</span>
                   <span className="assigned-ticket-service">

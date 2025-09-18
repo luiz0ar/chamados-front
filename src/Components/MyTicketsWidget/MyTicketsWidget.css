@@ -25,11 +25,12 @@
 }
 
 .assigned-ticket-count-badge {
-  background-color: #fca311;
+  background-color: rgb(255, 204, 41);
   color: white;
   font-size: 0.8rem;
   font-weight: bold;
   padding: 3px 9px;
+  text-shadow: 2px 2px 4px rgba(0,0,0,3);
   border-radius: 12px;
 }
 
@@ -38,7 +39,6 @@
   padding: 0.5rem;
 }
 
-/* Customizando a barra de rolagem para um visual mais clean */
 .assigned-widget-content::-webkit-scrollbar {
   width: 6px;
 }
