@@ -6,6 +6,10 @@ import ResetPassword from '../pages/ResetPassword/ResetPassword';
 import GlobalConfigs from '../pages/GlobalConfigs/GlobalConfigs';
 import UserConfig from '../pages/UserConfig/UserConfig';
 import EditUser from '../pages/EditUser/EditUser';
+import TicketManagement from '../pages/TicketManagement/TicketManagement';
+import SelectCategory from '../pages/CreateTicket/SelectCategory';
+import SelectService from '../pages/CreateTicket/SelectService';
+import TicketForm from '../pages/CreateTicket/TicketForm';
 
 export const AppRoutes = () => {
   return (
@@ -17,6 +21,10 @@ export const AppRoutes = () => {
       <Route path="/configuracoes" element={<GlobalConfigs />} />
       <Route path="/gerenciar-usuarios" element={<UserConfig />} />
       <Route path="/editar-usuario/:id" element={<EditUser />} />
+      <Route path="/gestao-chamados" element={<TicketManagement />} />
+      <Route path="/novo-chamado" element={<SelectCategory />} />
+      <Route path="/novo-chamado/:categoryId" element={<SelectService />} />
+      <Route path="/novo-chamado/:categoryId/:serviceId" element={<TicketForm />} />
       <Route path="*" element={<Login />} />
     </Routes>
   );

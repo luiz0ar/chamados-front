@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import LoadingScreen from '../../Components/LoadingScreen/LoadingScreen';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import api from '../../resources/api';
@@ -9,21 +10,31 @@ import '../GlobalConfigs/GlobalConfigs.css';
 import { FaSpinner } from 'react-icons/fa';
 import StyledSelect from '../../Components/StyledSelect/StyledSelect';
 
+interface Department { id: number; name: string; }
+interface Role { id: number; name: string; }
+interface Queue { id: number; name: string; }
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  department_id: number | null;
+  is_active: 1 | 0;
+  image_url: string | null;
+  department: Department | null;
+  roles: Role[];
+  queues: Queue[];
+}
+
 const EditUser: React.FC = () => {
-  const [user, setUser] = useState<any>(null);
-  const [originalEmail, setOriginalEmail] = useState<string>('');
-  const [originalQueueId, setOriginalQueueId] = useState<number | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
-  const [departments, setDepartments] = useState<{ id: number, name: string }[]>([]);
-  const [roles, setRoles] = useState<{ id: number, name: string }[]>([]);
-  const [queues, setQueues] = useState<{ id: number, name: string }[]>([]);
-
-  const [emailError, setEmailError] = useState<string>('');
-  const [isEmailChecking, setIsEmailChecking] = useState(false);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [queues, setQueues] = useState<Queue[]>([]);
 
   useEffect(() => {
     if (!id) {
@@ -42,14 +53,10 @@ const EditUser: React.FC = () => {
           api.get('/queues'),
         ]);
 
-        const userData = userResponse.data;
-        setUser(userData);
-        setOriginalEmail(userData.email);
-        setOriginalQueueId(userData.queues?.[0]?.id || null);
-
-        setDepartments(departmentsResponse.data.data || []);
-        setRoles(rolesResponse.data.data || []);
-        setQueues(queuesResponse.data.data || []);
+        setUser(userResponse.data);
+        setDepartments(departmentsResponse.data || []);
+        setRoles(rolesResponse.data || []);
+        setQueues(queuesResponse.data || []);
 
       } catch (error) {
         toast.error("Não foi possível carregar os dados necessários para a página.");
@@ -63,102 +70,66 @@ const EditUser: React.FC = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    if (name === 'email') setEmailError('');
-    setUser((prevUser: any) => ({ ...prevUser, [name]: value }));
+    setUser(prevUser => (prevUser ? { ...prevUser, [name]: value } : null));
   };
 
   const handleDepartmentChange = (selectedOption: any) => {
-    setUser((prevUser: any) => ({
-      ...prevUser,
-      department_id: selectedOption ? selectedOption.value : null,
-      department: selectedOption ? { id: selectedOption.value, name: selectedOption.label } : null,
-    }));
+    setUser(prevUser => {
+      if (!prevUser) return null;
+      return {
+        ...prevUser,
+        department_id: selectedOption ? selectedOption.value : null,
+        department: selectedOption ? { id: selectedOption.value, name: selectedOption.label } : null,
+      };
+    });
   };
 
   const handleRoleChange = (selectedOptions: any) => {
-    const roleIds = selectedOptions.map((option: any) => option.value);
-    setUser((prevUser: any) => ({
-      ...prevUser,
-      roles: roleIds,
-    }));
+    setUser(prevUser => {
+      if (!prevUser) return null;
+      const roleIds = selectedOptions.map((opt: any) => ({ id: opt.value, name: opt.label }));
+      return { ...prevUser, roles: roleIds };
+    });
   };
 
   const handleQueuesChange = (selectedOption: any) => {
-    setUser((prevUser: any) => ({
-      ...prevUser,
-      queues: selectedOption ? [{ id: selectedOption.value, name: selectedOption.label }] : [],
-    }));
+    setUser(prevUser => {
+      if (!prevUser) return null;
+      return {
+        ...prevUser,
+        queues: selectedOption ? [{ id: selectedOption.value, name: selectedOption.label }] : [],
+      };
+    });
   };
 
   const handleStatusToggle = () => {
-    setUser((prevUser: any) => ({
-      ...prevUser,
-      is_active: prevUser.is_active ? 0 : 1,
-    }));
+    setUser(prevUser => {
+      if (!prevUser) return null;
+      return { ...prevUser, is_active: prevUser.is_active ? 0 : 1 };
+    });
   };
 
-  const handleEmailBlur = async (): Promise<boolean> => {
-    if (!user || user.email === originalEmail) return true;
-    if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(user.email)) {
-      setEmailError("Formato de e-mail inválido.");
-      return false;
-    }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
 
-    setIsEmailChecking(true);
+    setIsSaving(true);
     try {
-      await api.post('/users/check-email', { email: user.email });
-      setEmailError('');
-      return true;
-    } catch (error: any) {
-      if (error.response?.status === 409) {
-        setEmailError("Este e-mail já está em uso.");
-      } else {
-        setEmailError("Não foi possível verificar o e-mail.");
-      }
-      return false;
+      const payload = {
+        ...user,
+        roles: user.roles.map(role => role.id),
+        queues: user.queues.map(queue => queue.id),
+      };
+
+      await api.put(`/users/${id}`, payload);
+      toast.success("Usuário atualizado com sucesso!");
+
+    } catch (error) {
+      toast.error("Não foi possível salvar as alterações.");
     } finally {
-      setIsEmailChecking(false);
+      setIsSaving(false);
     }
   };
-
- const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  const isEmailValid = await handleEmailBlur();
-  if (!isEmailValid) {
-    toast.error("Por favor, corrija os erros no formulário.");
-    return;
-  }
-
-  setIsSaving(true);
-  try {
-    const newQueueId = user.queues?.[0]?.id || null;
-    const queueHasChanged = originalQueueId !== newQueueId;
-    const { queues, ...userDataToSend } = user;
-    const promisesToAwait = [
-      api.put(`/users/${id}`, userDataToSend)
-    ];
-    if (queueHasChanged) {
-      if (originalQueueId) {
-        promisesToAwait.push(
-          api.delete(`/queues/${originalQueueId}/users/${id}`)
-        );
-      }
-      if (newQueueId) {
-        promisesToAwait.push(
-          api.post(`/queues/${newQueueId}/users`, { user_id: id })
-        );
-      }
-    }
-    await Promise.all(promisesToAwait);
-    toast.success("Usuário atualizado com sucesso!");
-    setOriginalEmail(user.email);
-    setOriginalQueueId(newQueueId);
-  } catch (error) {
-    toast.error("Não foi possível salvar as alterações.");
-  } finally {
-    setIsSaving(false);
-  }
-};
 
   const breadcrumbItems = [
     { label: 'INÍCIO', path: '/inicio' },
@@ -167,15 +138,16 @@ const EditUser: React.FC = () => {
   ];
 
   if (isLoading || !user) {
-    return <div className="loading-container">Carregando dados do usuário...</div>;
+    return <LoadingScreen />;
   }
 
-  const departmentOptions = departments.map(dep => ({ value: dep.id, label: dep.name }));
-  const roleOptions = roles.map(role => ({ value: role.id, label: role.name }));
-  const queueOptions = queues.map(queue => ({ value: queue.id, label: queue.name }));
+  const departmentOptions = departments.map(d => ({ value: d.id, label: d.name }));
+  const roleOptions = roles.map(r => ({ value: r.id, label: r.name }));
+  const queueOptions = queues.map(q => ({ value: q.id, label: q.name }));
 
-  const selectedQueueValue = queueOptions.find(option => user.queues?.[0] && option.value === user.queues[0].id) || null;
-  const selectedRolesValue = roleOptions.filter(option => user.roles?.some((userRole: any) => userRole.id === option.value));
+  const selectedDepartmentValue = departmentOptions.find(opt => String(opt.value) === String(user.department?.id)) || null;
+  const selectedRolesValue = roleOptions.filter(opt => user.roles.some(userRole => String(userRole.id) === String(opt.value)));
+  const selectedQueueValue = queueOptions.find(opt => user.queues?.[0] && String(opt.value) === String(user.queues[0].id)) || null;
 
   return (
     <div className="home-container">
@@ -189,71 +161,38 @@ const EditUser: React.FC = () => {
               <input id="name" name="name" type="text" value={user.name} onChange={handleChange} className="form-input" required />
             </div>
 
-            <div className="form-group email-group">
+            <div className="form-group">
               <label htmlFor="email">E-mail<span className="required-star">*</span></label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                value={user.email}
-                onChange={handleChange}
-                onBlur={handleEmailBlur}
-                className={`form-input ${emailError ? 'input-error' : ''}`}
-              />
-              {isEmailChecking && <FaSpinner className="email-checking-spinner" />}
-              {emailError && <span className="error-message">{emailError}</span>}
+              <input id="email" name="email" type="email" value={user.email} onChange={handleChange} className="form-input" />
             </div>
 
             <div className="form-group">
               <label htmlFor="department_id">Departamento<span className="required-star">*</span></label>
-              <StyledSelect
-                options={departmentOptions}
-                value={departmentOptions.find(option => option.value === user.department?.id) || null}
-                onChange={handleDepartmentChange}
-              />
+              <StyledSelect options={departmentOptions} value={selectedDepartmentValue} onChange={handleDepartmentChange} />
             </div>
 
             <div className="form-group">
               <label htmlFor="role">Cargo no Sistema<span className="required-star">*</span></label>
-              <StyledSelect
-                isMulti
-                options={roleOptions}
-                value={selectedRolesValue}
-                onChange={handleRoleChange}
-              />
+              <StyledSelect isMulti options={roleOptions} value={selectedRolesValue} onChange={handleRoleChange} />
             </div>
 
             <div className="form-group">
               <label htmlFor="queues">Fila<span className="required-star">*</span></label>
-              <StyledSelect
-                options={queueOptions}
-                value={selectedQueueValue}
-                onChange={handleQueuesChange}
-              />
+              <StyledSelect options={queueOptions} value={selectedQueueValue} onChange={handleQueuesChange} />
             </div>
 
             <div className="switch-container">
               <label className="switch">
-                <input
-                  type="checkbox"
-                  checked={!!user.is_active}
-                  onChange={handleStatusToggle}
-                />
+                <input type="checkbox" checked={!!user.is_active} onChange={handleStatusToggle} />
                 <span className="slider"></span>
               </label>
-              <span className={`status-label ${user.is_active ? 'active' : 'inactive'}`}>
-                {user.is_active ? 'ATIVO' : 'INATIVO'}
-              </span>
+              <span className={`status-label ${user.is_active ? 'active' : 'inactive'}`}>{user.is_active ? 'ATIVO' : 'INATIVO'}</span>
             </div>
           </div>
 
           <div className="form-actions">
             <button type="button" className="btn-cancel" onClick={() => navigate('/gerenciar-usuarios')}>Cancelar</button>
-            <button
-              type="submit"
-              className="btn-confirm"
-              disabled={isSaving || isEmailChecking || !!emailError}
-            >
+            <button type="submit" className="btn-confirm" disabled={isSaving}>
               {isSaving ? <FaSpinner className="spinner" /> : 'Salvar'}
             </button>
           </div>

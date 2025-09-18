@@ -3,25 +3,32 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../resources/api';
 import './GlobalConfigs.css';
 import '../Home/home.css';
-import { FaEdit, FaTrash, FaPlus, FaSearch } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaSearch, FaCog, FaShieldAlt } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import Breadcrumb from '../../Components/Breadcrumb/Breadcrumb';
 import CrudModal from '../../Components/CrudModal/CrudModal';
 import ConfirmModal from '../../Components/ConfirmModal/ConfirmModal';
 import Header from '../../Components/Header/Header';
 import ServicesModal from '../../Components/ServiceModal/ServiceModal';
+import PermissionsModal from '../../Components/PermissionsModal/PermissionsModal';
+import LoadingScreen from '../../Components/LoadingScreen/LoadingScreen';
 
 interface CrudItem {
   id: number;
   name: string;
   services?: { id: number, name: string }[];
+  permissions?: { id: number, name: string }[];
+  time_limit?: number;
 }
-
 interface User {
   id: number;
   name: string;
   roles: { name: string }[];
   image_url: string | null;
+}
+interface SaveData {
+  name: string;
+  time_limit?: number;
 }
 
 const TABS = [
@@ -34,6 +41,9 @@ const TABS = [
   { key: 'departments', label: 'Departamentos' },
   { key: 'categories', label: 'Categorias' },
   { key: 'services', label: 'Serviços' },
+  { key: 'roles', label: 'Funções' },
+  { key: 'slas', label: 'SLA' },
+  { key: 'permissions', label: 'Permissões' }
 ];
 
 const GlobalConfigs: React.FC = () => {
@@ -47,6 +57,8 @@ const GlobalConfigs: React.FC = () => {
   const [isActionLoading, setIsActionLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [user, setUser] = useState<User | null>(null);
+  const [isPermissionsModalOpen, setIsPermissionsModalOpen] = useState(false);
+  const [allPermissions, setAllPermissions] = useState<{ id: number, name: string }[]>([]);
   const [allServices, setAllServices] = useState<{ id: number, name: string }[]>([]);
   const [isServicesModalOpen, setIsServicesModalOpen] = useState(false);
 
@@ -102,20 +114,37 @@ const GlobalConfigs: React.FC = () => {
     fetchServices();
   }, []);
 
+  useEffect(() => {
+    const fetchAssociables = async () => {
+      try {
+        const [servicesRes, permissionsRes] = await Promise.all([
+          api.get('/services'),
+          api.get('/permissions')
+
+        ]);
+        setAllServices(servicesRes.data);
+        setAllPermissions(permissionsRes.data.data || permissionsRes.data || []);
+      } catch (error) {
+        toast.error("Não foi possível carregar a lista de serviços ou permissões.");
+      }
+    };
+    fetchAssociables();
+  }, []);
+
   const handleAddItem = () => {
     setIsModalOpen(true);
     setItemToEdit(null);
   };
 
-  const handleSaveItem = async (name: string) => {
+  const handleSaveItem = async (formData: SaveData) => {
     setIsActionLoading(true);
     try {
       if (itemToEdit) {
-        const response = await api.put(`/${activeTab.key}/${itemToEdit.id}`, { name });
+        const response = await api.put(`/${activeTab.key}/${itemToEdit.id}`, formData);
         setData(data.map(item => item.id === itemToEdit.id ? response.data : item));
         toast.success("Item atualizado com sucesso!");
       } else {
-        const response = await api.post(`/${activeTab.key}`, { name });
+        const response = await api.post(`/${activeTab.key}`, formData);
         setData([...data, response.data]);
         toast.success("Item adicionado com sucesso!");
       }
@@ -128,36 +157,87 @@ const GlobalConfigs: React.FC = () => {
     }
   };
 
-  const handleEditItem = (item: CrudItem) => {
+  // const handleEditItem = (item: CrudItem) => {
+  //   setItemToEdit(item);
+  //   setIsModalOpen(true);
+  // };
+
+  const openEditModal = (item: CrudItem) => {
     setItemToEdit(item);
     setIsModalOpen(true);
   };
 
-  const handleServicesClick = () => {
+  const handleServicesClick = (item: CrudItem) => {
+    setItemToEdit(item);
     setIsServicesModalOpen(true);
   };
 
-const handleSaveQueueServices = async (selectedServices: any[]) => {
-  if (!itemToEdit) return;
-  setIsActionLoading(true);
-  try {
-    const serviceIds = selectedServices.map(s => s.value);
-    await api.post(`/queues/${itemToEdit.id}/services`, { services: serviceIds });
-    const updatedItem = {
-      ...itemToEdit,
-      services: selectedServices.map(s => ({ id: s.value, name: s.label }))
-    };
-    setData(data.map(item => item.id === itemToEdit.id ? updatedItem : item));
-    setItemToEdit(updatedItem);
+  const handlePermissionsClick = async (role: CrudItem) => {
+    setItemToEdit(role);
+    setIsActionLoading(true);
+    try {
+      const response = await api.get(`/roles/${role.id}/permissions`);
+      const currentPermissions = response.data.data || response.data || [];
+      setItemToEdit({ ...role, permissions: currentPermissions });
+      setIsPermissionsModalOpen(true);
+    } catch (error) {
+      toast.error("Não foi possível carregar as permissões desta função.");
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
 
-    toast.success("Serviços associados com sucesso!");
-    setIsServicesModalOpen(false);
-  } catch (error) {
-    toast.error("Não foi possível associar os serviços.");
-  } finally {
-    setIsActionLoading(false);
-  }
-};
+  const handleSaveQueueServices = async (selectedServices: any[]) => {
+    if (!itemToEdit) return;
+    setIsActionLoading(true);
+    try {
+      const serviceIds = selectedServices.map(s => s.value);
+      await api.post(`/queues/${itemToEdit.id}/services`, { services: serviceIds });
+      const updatedItem = {
+        ...itemToEdit,
+        services: selectedServices.map(s => ({ id: s.value, name: s.label }))
+      };
+      setData(data.map(item => item.id === itemToEdit.id ? updatedItem : item));
+      setItemToEdit(updatedItem);
+
+      toast.success("Serviços adicionados com sucesso!");
+      setIsServicesModalOpen(false);
+    } catch (error) {
+      toast.error("Não foi possível adicionar os serviços.");
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
+
+  const handleSaveRolePermissions = async (selectedPermissions: any[]) => {
+    if (!itemToEdit) return;
+    setIsActionLoading(true);
+    try {
+      const initialPermissionIds = new Set(itemToEdit.permissions?.map(p => p.id) || []);
+      const selectedPermissionIds = new Set(selectedPermissions.map(p => p.value));
+      const permissionsToAdd = selectedPermissions.filter(p => !initialPermissionIds.has(p.value)).map(p => p.value);
+      const permissionsToRemove = itemToEdit.permissions?.filter(p => !selectedPermissionIds.has(p.id)).map(p => p.id) || [];
+      const promisesToAwait = [];
+      if (permissionsToAdd.length > 0) {
+        promisesToAwait.push(api.post(`/roles/${itemToEdit.id}/permissions`, { permissions: permissionsToAdd }));
+      }
+      if (permissionsToRemove.length > 0) {
+        promisesToAwait.push(api.delete(`/roles/${itemToEdit.id}/permissions`, { data: { permissions: permissionsToRemove } }));
+      }
+      if (promisesToAwait.length > 0) {
+        await Promise.all(promisesToAwait);
+      }
+      const updatedItem = { ...itemToEdit, permissions: selectedPermissions.map(p => ({ id: p.value, name: p.label })) };
+      setData(data.map(item => item.id === itemToEdit.id ? updatedItem : item));
+      setItemToEdit(updatedItem);
+      toast.success("Permissões atualizadas com sucesso!");
+      setIsPermissionsModalOpen(false);
+    } catch (error) {
+      toast.error("Não foi possível atualizar as permissões.");
+    } finally {
+      setIsActionLoading(false);
+    }
+  };
 
   const openDeleteModal = (item: CrudItem) => {
     setItemToDelete(item);
@@ -191,7 +271,7 @@ const handleSaveQueueServices = async (selectedServices: any[]) => {
   );
 
   if (!user) {
-    return <div className="loading-container">Verificando permissões...</div>;
+    return <LoadingScreen />;
   }
 
   return (
@@ -201,11 +281,7 @@ const handleSaveQueueServices = async (selectedServices: any[]) => {
         <Breadcrumb items={breadcrumbItems} />
         <nav className="tabs-container">
           {TABS.map(tab => (
-            <button
-              key={tab.key}
-              className={`tab-button ${activeTab.key === tab.key ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab)}
-            >
+            <button key={tab.key} className={`tab-button ${activeTab.key === tab.key ? 'active' : ''}`} onClick={() => setActiveTab(tab)}>
               {tab.label}
             </button>
           ))}
@@ -230,24 +306,36 @@ const handleSaveQueueServices = async (selectedServices: any[]) => {
             </div>
           </div>
           {isLoading ? (
-            <p className='loading-text'>Carregando...</p>
+            <LoadingScreen />
           ) : (
             <div className="table-container">
               <table className="data-table">
                 <thead>
                   <tr>
-                    <th>Nome</th>
+                    {activeTab.key === 'slas' ? <th>Nome do Tempo</th> : <th>Nome</th>}
+                    {activeTab.key === 'slas' && <th>Limite de Tempo (min)</th>}
                     <th style={{ textAlign: 'center' }}>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredData.map(item => (
                     <tr key={item.id}>
-                      <td>{item.name}</td>
+                      <td>{item.name || (item as any).time_name}</td>
+                      {activeTab.key === 'slas' && <td>{item.time_limit}</td>}
                       <td>
                         <div className="actions-cell">
-                          <button className="action-button edit" onClick={() => handleEditItem(item)}>
-                            <FaEdit title="Editar" />
+                          {(activeTab.key === 'queues' || activeTab.key === 'categories') && (
+                            <button className="action-button services" onClick={() => handleServicesClick(item)}>
+                              <FaCog title="Gerenciar Serviços" />
+                            </button>
+                          )}
+                          {activeTab.key === 'roles' && (
+                            <button className="action-button permissions" onClick={() => handlePermissionsClick(item)}>
+                              <FaShieldAlt title="Gerenciar Permissões" />
+                            </button>
+                          )}
+                          <button className="action-button edit" onClick={() => openEditModal(item)}>
+                            <FaEdit title="Editar Nome" />
                           </button>
                           <button className="action-button delete" onClick={() => openDeleteModal(item)}>
                             <FaTrash title="Excluir" />
@@ -262,6 +350,7 @@ const handleSaveQueueServices = async (selectedServices: any[]) => {
           )}
         </section>
       </main>
+
       <CrudModal
         isOpen={isModalOpen}
         onClose={() => { setIsModalOpen(false); setItemToEdit(null); }}
@@ -269,23 +358,37 @@ const handleSaveQueueServices = async (selectedServices: any[]) => {
         title={`${itemToEdit ? 'Editar' : 'Adicionar'} ${activeTab.label.endsWith('s') ? activeTab.label.slice(0, -1) : activeTab.label}`}
         isLoading={isActionLoading}
         currentItem={itemToEdit}
-        showServicesButton={activeTab.key === 'queues' && !!itemToEdit}
-        onServicesClick={handleServicesClick}
+        showTimeLimitField={activeTab.key === 'slas'}
       />
+
       <ConfirmModal
         isOpen={!!itemToDelete}
         onClose={() => setItemToDelete(null)}
         onConfirm={confirmDeleteItem}
         title="Confirmar Exclusão"
-        message={`Você tem certeza que deseja excluir o item "${itemToDelete?.name}"? Esta ação não pode ser desfeita.`}
+        message={`Você tem certeza que deseja excluir o item "${itemToDelete?.name}"?`}
         isLoading={isActionLoading}
       />
+
       <ServicesModal
         isOpen={isServicesModalOpen}
         onClose={() => setIsServicesModalOpen(false)}
         onSave={handleSaveQueueServices}
         allServices={allServices.map(s => ({ value: s.id, label: s.name }))}
-        initialSelectedServices={itemToEdit?.services?.map(s => ({ value: s.id, label: s.name })) || []}
+        initialSelectedServices={
+          Array.isArray(itemToEdit?.services)
+            ? itemToEdit.services.map(s => ({ value: s.id, label: s.name }))
+            : []
+        }
+        isLoading={isActionLoading}
+      />
+
+      <PermissionsModal
+        isOpen={isPermissionsModalOpen}
+        onClose={() => setIsPermissionsModalOpen(false)}
+        onSave={handleSaveRolePermissions}
+        allPermissions={allPermissions.map(p => ({ value: p.id, label: p.name }))}
+        initialSelectedPermissions={itemToEdit?.permissions?.map(p => ({ value: p.id, label: p.name })) || []}
         isLoading={isActionLoading}
       />
     </div>

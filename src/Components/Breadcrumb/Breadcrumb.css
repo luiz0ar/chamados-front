@@ -8,7 +8,7 @@
 }
 
 .breadcrumb-link {
-  font-size: 2.5rem;
+  font-size: 1.5rem;
   font-weight: 600;
   color: #ccc;
   text-decoration: none;
@@ -20,7 +20,7 @@
 }
 
 .breadcrumb-active {
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 600;
   color: #fff;
 }

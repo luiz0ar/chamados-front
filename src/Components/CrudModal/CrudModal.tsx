@@ -5,17 +5,24 @@ import { FaSpinner, FaTimes, FaCog } from 'react-icons/fa';
 interface CrudItem {
   id: number;
   name: string;
+  time_limit?: number;
+}
+
+interface SaveData {
+  name: string;
+  time_limit?: number;
 }
 
 interface CrudModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (name: string) => Promise<any>;
+  onSave: (data: SaveData) => Promise<any>;
   title: string;
   isLoading: boolean;
   currentItem?: CrudItem | null;
   showServicesButton?: boolean;
   onServicesClick?: () => void;
+  showTimeLimitField?: boolean;
 }
 
 const CrudModal: React.FC<CrudModalProps> = ({
@@ -26,21 +33,33 @@ const CrudModal: React.FC<CrudModalProps> = ({
   isLoading,
   currentItem,
   showServicesButton = false,
-  onServicesClick
+  onServicesClick,
+  showTimeLimitField = false
 }) => {
-  const [itemName, setItemName] = useState('');
+  const [formData, setFormData] = useState({ name: '', time_limit: '' });
 
   useEffect(() => {
     if (isOpen) {
-      setItemName(currentItem?.name || '');
+      setFormData({
+        name: currentItem?.name || '',
+        time_limit: String(currentItem?.time_limit || '')
+      });
     }
   }, [isOpen, currentItem]);
 
+  const handleSave = async () => {
+    if (isLoading || !formData.name.trim() || (showTimeLimitField && !formData.time_limit)) return;
+
+    const dataToSave: SaveData = { name: formData.name };
+    if (showTimeLimitField) {
+      dataToSave.time_limit = Number(formData.time_limit);
+    }
+    await onSave(dataToSave);
+  };
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onClose();
-      }
+      if (event.key === 'Escape') onClose();
       if (event.key === 'Enter') {
         event.preventDefault();
         handleSave();
@@ -54,16 +73,18 @@ const CrudModal: React.FC<CrudModalProps> = ({
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, onClose, itemName, isLoading, onSave]);
+  }, [isOpen, onClose, formData, isLoading, onSave]);
 
-  const handleSave = async () => {
-    if (isLoading || !itemName.trim()) return;
-    await onSave(itemName);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   if (!isOpen) {
     return null;
   }
+
+  const isSaveDisabled = isLoading || !formData.name.trim() || (showTimeLimitField && !formData.time_limit.toString().trim());
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -73,28 +94,42 @@ const CrudModal: React.FC<CrudModalProps> = ({
           <button className="modal-close-button" onClick={onClose}><FaTimes /></button>
         </div>
         <div className="modal-body">
-          <div className="input-group">
-            <div className="input-wrapper">
+          <div className="form-group">
+            <label>Nome</label>
+            <input
+              type="text"
+              name="name"
+              className="login-input"
+              placeholder="Nome do item"
+              value={formData.name.toUpperCase()}
+              onChange={handleChange}
+              autoFocus
+            />
+          </div>
+
+          {showTimeLimitField && (
+            <div className="form-group">
+              <label>Limite de Tempo (em minutos)</label>
               <input
-                type="text"
+                type="number"
+                name="time_limit"
                 className="login-input"
-                placeholder="Nome do item"
-                value={itemName.toUpperCase()}
-                onChange={(e) => setItemName(e.target.value)}
-                autoFocus
+                placeholder="Ex: 60"
+                value={formData.time_limit}
+                onChange={handleChange}
               />
             </div>
-          </div>
+          )}
         </div>
         <div className="modal-footer">
           {showServicesButton && (
-            <button className="btn-services-button" onClick={onServicesClick}>
+            <button className="btn-secondary services-button" onClick={onServicesClick}>
               <FaCog /> Serviços
             </button>
           )}
           <div style={{ flex: 1 }}></div>
           <button className="btn-cancel" onClick={onClose}>Cancelar</button>
-          <button className="btn-confirm" onClick={handleSave} disabled={isLoading || !itemName.trim()}>
+          <button className="btn-confirm" onClick={handleSave} disabled={isSaveDisabled}>
             {isLoading ? <FaSpinner className="spinner" /> : 'Salvar'}
           </button>
         </div>

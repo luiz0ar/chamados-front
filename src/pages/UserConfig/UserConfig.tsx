@@ -6,6 +6,7 @@ import Header from '../../Components/Header/Header';
 import Breadcrumb from '../../Components/Breadcrumb/Breadcrumb';
 import StyledSelect from '../../Components/StyledSelect/StyledSelect';
 import { FaEdit, FaTrash, FaPlus, FaSearch } from 'react-icons/fa';
+import LoadingScreen from '../../Components/LoadingScreen/LoadingScreen';
 import './UserConfig.css';
 
 interface UserFromApi {
@@ -85,7 +86,7 @@ const UserConfig: React.FC = () => {
   ];
 
   if (!loggedInUser) {
-    return <div className="loading-container">Verificando permissões...</div>;
+    return <LoadingScreen />
   }
 
   return (

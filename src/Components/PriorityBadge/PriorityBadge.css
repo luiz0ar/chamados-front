@@ -1,0 +1,30 @@
+.priority-badge {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 1rem;
+}
+
+.priority-low {
+  color: rgb(0, 161, 86);
+}
+
+.priority-medium {
+  color: #1976d2;
+}
+
+.priority-high {
+  color: orange;
+}
+
+.priority-urgent {
+  color: #c05757;
+}
+
+.priority-critical {
+  color: red;
+}
+
+.priority-default {
+  color: #ccc;
+}
+

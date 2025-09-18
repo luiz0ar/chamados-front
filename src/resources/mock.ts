@@ -9,7 +9,6 @@ interface User {
   is_active: 1 | 0;
 }
 
-// Base de dados em memória para simular o backend
 let mockUsers: User[] = [
   {
     id: 1, name: 'Ana Carolina (Mock)', email: 'ana.oliveira@minasul.com.br',
@@ -61,24 +60,22 @@ const mockApi = {
       const user = mockUsers.find(u => u.id === id);
       return Promise.resolve({ data: user });
     }
-    
-    if (url.startsWith('/users')) { 
-      // Simula uma resposta paginada para a lista de usuários
-      return Promise.resolve({ 
+
+    if (url.startsWith('/users')) {
+      return Promise.resolve({
         data: {
           data: mockUsers,
           current_page: 1,
           last_page: 1,
           total: mockUsers.length
-        } 
+        }
       });
     }
 
-    // Adicionado: Rota para buscar departamentos
     if (url.startsWith('/departments')) {
         return Promise.resolve({ data: mockDepartments });
     }
-    
+
     if (url === '/me') {
       return Promise.resolve({ data: mockUsers.find(u => u.roles.some(r => r.name === 'ADMIN')) });
     }
@@ -95,14 +92,14 @@ const mockApi = {
         const fakeToken = 'fake-jwt-token-for-mock-development-' + Math.random();
         return Promise.resolve({ data: { token: fakeToken } });
       } else {
-        return Promise.reject({ 
-          response: { 
-            data: { message: 'Email e senha são obrigatórios (Mock)' } 
-          } 
+        return Promise.reject({
+          response: {
+            data: { message: 'Email e senha são obrigatórios (Mock)' }
+          }
         });
       }
     }
-    
+
     if (url === '/logout') {
         return Promise.resolve({ data: { message: 'Logout mock bem-sucedido' } });
     }
@@ -111,7 +108,7 @@ const mockApi = {
       toast.success(`(Mock) Link de recuperação enviado para ${payload.email}`);
       return Promise.resolve({ data: { success: true } });
     }
-    
+
     return Promise.reject({ message: `Rota POST ${url} não encontrada no mock` });
   },
 
@@ -121,7 +118,7 @@ const mockApi = {
 
     if (url.includes('/active')) {
       const id = parseInt(url.split('/')[2]);
-      mockUsers = mockUsers.map(user => 
+      mockUsers = mockUsers.map(user =>
         user.id === id ? { ...user, is_active: payload.is_active } : user
       );
       return Promise.resolve({ data: { success: true } });
@@ -135,7 +132,7 @@ const mockApi = {
     await new Promise(resolve => setTimeout(resolve, 500));
     return Promise.resolve({ data: { success: true, ...payload } });
   },
-  
+
   delete: async (url: string) => {
     console.log(`%c[MOCK API] DELETE: ${url}`, 'color: #ff6b6b');
     await new Promise(resolve => setTimeout(resolve, 500));

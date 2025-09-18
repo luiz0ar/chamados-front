@@ -1,0 +1,53 @@
+.ticket-flow-header {
+  margin-bottom: 2rem;
+}
+.ticket-flow-header h2 {
+  font-size: 2rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+.ticket-flow-header p {
+  color: #ccc;
+  font-size: 1.1rem;
+}
+.form-grid-single-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+textarea.form-input {
+  resize: vertical;
+  min-height: 150px;
+  font-family: 'Poppins', sans-serif;
+}
+.attachment-area input[type="file"] {
+  display: none;
+}
+.attachment-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  background-color: transparent;
+  color: #ccc;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+.attachment-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+.attachment-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+.attachment-tag {
+  background-color: #333;
+  color: #ccc;
+  padding: 0.3rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+}

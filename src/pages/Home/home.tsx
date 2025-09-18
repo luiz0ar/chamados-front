@@ -8,6 +8,8 @@ import { MdOutlineSupportAgent } from "react-icons/md";
 import { FaWpforms, FaGears } from "react-icons/fa6";
 import { BsDatabaseFill } from "react-icons/bs";
 import { IoAnalyticsSharp } from "react-icons/io5";
+import LoadingScreen from '../../Components/LoadingScreen/LoadingScreen';
+import MyTicketsWidget from '../../Components/MyTicketsWidget/MyTicketsWidget';
 
 interface LoggedInUser {
   id: number;
@@ -16,19 +18,29 @@ interface LoggedInUser {
   roles: { name: string }[];
 }
 
+interface AssignedTicket {
+  id: number;
+  services_id: number;
+}
+
+interface Service {
+  id: number;
+  name: string;
+}
+
 const allActionItems = [
   {
     icon: <MdOutlineSupportAgent className="card-icon" />,
     title: 'Gestão de Chamados',
     description: 'Visualize, atualize e gerencie todos os chamados existentes.',
-    link: '#',
+    link: '/gestao-chamados',
     adminOnly: false
   },
   {
     icon: <FaWpforms className="card-icon" />,
     title: 'Abertura de Chamados',
     description: 'Precisa de ajuda? Abra um novo chamado para nossa equipe.',
-    link: '#',
+    link: '/novo-chamado',
     adminOnly: false
   },
   {
@@ -65,58 +77,78 @@ const Home: React.FC = () => {
   const [user, setUser] = useState<LoggedInUser | null>(null);
   const navigate = useNavigate();
 
+  const [assignedTickets, setAssignedTickets] = useState<AssignedTicket[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchHomePageData = async () => {
       try {
-        const response = await api.get('/me');
-        setUser(response.data);
+        const [meResponse, assignedTicketsResponse, servicesResponse] = await Promise.all([
+          api.get('/me'),
+          api.get('/my-open-tickets'),
+          api.get('/services')
+        ]);
+
+        setUser(meResponse.data);
+        setAssignedTickets(assignedTicketsResponse.data.data || assignedTicketsResponse.data || []);
+        setServices(servicesResponse.data.data || servicesResponse.data || []);
+
       } catch (error) {
-        console.error("Erro ao buscar dados do usuário:", error);
+        console.error("Erro ao buscar dados da página inicial:", error);
         navigate('/login');
+      } finally {
+        setIsLoading(false);
       }
     };
-    fetchUserData();
+    fetchHomePageData();
   }, [navigate]);
 
   const visibleActionItems = useMemo(() => {
-    if (!user) {
-      return [];
-    }
+    if (!user) return [];
     const isAdmin = user.roles.some(role => role.name === 'ADMIN');
-    if (isAdmin) {
-      return allActionItems;
-    }
+    if (isAdmin) return allActionItems;
     return allActionItems.filter(item => !item.adminOnly);
   }, [user]);
 
-  if (!user) {
-    return <div className="loading-container">Carregando...</div>;
+  if (isLoading || !user) {
+    return <LoadingScreen />
   }
+
+  const hasAssignedTickets = assignedTickets.length > 0;
 
   return (
     <div className="home-container">
       <Header imageUrl={user.image_url} />
 
-      <main className="home-content">
-        <header className="welcome-header">
-          <h1>Olá, {user.name}.</h1>
-          <p>Como podemos te ajudar hoje?</p>
-        </header>
+      <main className={hasAssignedTickets ? 'home-layout-with-widget' : 'home-layout-default'}>
 
-        <div className="search-container">
-          <FaSearch className="search-icon" />
-          <input type="text" placeholder="Pesquise por chamados, artigos ou relatórios..." className="search-input" />
+        <div className="main-content-area">
+          <header className="welcome-header">
+            <h1>Olá, {user.name}.</h1>
+            <p>Como podemos te ajudar hoje?</p>
+          </header>
+
+          <div className="search-container">
+            <FaSearch className="search-icon" />
+            <input type="text" placeholder="Pesquise por chamados, artigos ou relatórios..." className="search-input" />
+          </div>
+
+          <section className="action-grid">
+            {visibleActionItems.map((item, index) => (
+              <Link to={item.link} key={index} className="action-card">
+                {item.icon}
+                <h3>{item.title}</h3>
+                <p>{item.description}</p>
+              </Link>
+            ))}
+          </section>
         </div>
 
-        <section className="action-grid">
-          {visibleActionItems.map((item, index) => (
-            <Link to={item.link} key={index} className="action-card">
-              {item.icon}
-              <h3>{item.title}</h3>
-              <p>{item.description}</p>
-            </Link>
-          ))}
-        </section>
+        {hasAssignedTickets && (
+          <MyTicketsWidget tickets={assignedTickets} services={services} />
+        )}
+
       </main>
     </div>
   );
