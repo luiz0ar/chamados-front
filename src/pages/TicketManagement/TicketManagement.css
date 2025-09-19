@@ -81,3 +81,23 @@
 .ticket-tooltip-content h4 {
   margin-top: 0;
 }
+
+.sortable-header {
+  cursor: pointer;
+  position: relative;
+  user-select: none;
+}
+
+.sortable-header .sort-icon {
+  margin-left: 8px;
+  color: #888;
+  transition: color 0.2s;
+}
+
+.sortable-header:hover .sort-icon {
+  color: #ccc;
+}
+
+.sortable-header .sort-icon.active {
+  color: #fff;
+}

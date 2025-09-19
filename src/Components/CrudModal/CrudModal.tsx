@@ -1,17 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { FaSpinner, FaTimes } from 'react-icons/fa';
+import { toast } from 'react-toastify';
+import api from '../../resources/api';
+import StyledSelect from '../StyledSelect/StyledSelect';
+import type { SingleValue } from 'react-select';
 import './CrudModal.css';
-import { FaSpinner, FaTimes, FaCog } from 'react-icons/fa';
 
 interface CrudItem {
   id: number;
   name: string;
   time_limit?: number;
+  priority_id?: number;
 }
-
 interface SaveData {
   name: string;
   time_limit?: number;
+  priority_id?: number;
 }
+interface Priority {
+  id: number;
+  name: string;
+}
+type SelectOption = {
+  value: number;
+  label: string;
+};
+
 
 interface CrudModalProps {
   isOpen: boolean;
@@ -32,27 +46,47 @@ const CrudModal: React.FC<CrudModalProps> = ({
   title,
   isLoading,
   currentItem,
-  showServicesButton = false,
-  onServicesClick,
   showTimeLimitField = false
 }) => {
-  const [formData, setFormData] = useState({ name: '', time_limit: '' });
+  const [formData, setFormData] = useState({ name: '', time_limit: '', priority_id: '' });
+  const [priorities, setPriorities] = useState<Priority[]>([]);
 
   useEffect(() => {
     if (isOpen) {
       setFormData({
         name: currentItem?.name || '',
-        time_limit: String(currentItem?.time_limit || '')
+        time_limit: String(currentItem?.time_limit || ''),
+        priority_id: String(currentItem?.priority_id || '')
       });
     }
   }, [isOpen, currentItem]);
 
+  useEffect(() => {
+    const fetchPriorities = async () => {
+      try {
+        const response = await api.get('/priorities');
+        setPriorities(response.data || []);
+      } catch (error) {
+        toast.error('Não foi possível carregar as prioridades.');
+      }
+    };
+
+    if (isOpen && showTimeLimitField) {
+      fetchPriorities();
+    }
+  }, [isOpen, showTimeLimitField]);
+
+
   const handleSave = async () => {
-    if (isLoading || !formData.name.trim() || (showTimeLimitField && !formData.time_limit)) return;
+    if (isLoading || !formData.name.trim() || (showTimeLimitField && (!formData.time_limit || !formData.priority_id))) {
+      toast.warn('Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
 
     const dataToSave: SaveData = { name: formData.name };
     if (showTimeLimitField) {
       dataToSave.time_limit = Number(formData.time_limit);
+      dataToSave.priority_id = Number(formData.priority_id);
     }
     await onSave(dataToSave);
   };
@@ -65,26 +99,39 @@ const CrudModal: React.FC<CrudModalProps> = ({
         handleSave();
       }
     };
+    if (isOpen) window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose, formData, isLoading, handleSave]);
 
-    if (isOpen) {
-      window.addEventListener('keydown', handleKeyDown);
-    }
 
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [isOpen, onClose, formData, isLoading, onSave]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
+
+  const handlePriorityChange = (selectedOption: SingleValue<SelectOption>) => {
+    setFormData(prev => ({
+      ...prev,
+      priority_id: selectedOption ? String(selectedOption.value) : ''
+    }));
+  };
+
+  const priorityOptions = useMemo(() => priorities.map(p => ({
+    value: p.id,
+    label: p.name
+  })), [priorities]);
+
+  const selectedPriority = useMemo(() =>
+    priorityOptions.find(option => option.value === Number(formData.priority_id)) || null,
+    [formData.priority_id, priorityOptions]
+  );
+
 
   if (!isOpen) {
     return null;
   }
 
-  const isSaveDisabled = isLoading || !formData.name.trim() || (showTimeLimitField && !formData.time_limit.toString().trim());
+  const isSaveDisabled = isLoading || !formData.name.trim() || (showTimeLimitField && (!formData.time_limit.toString().trim() || !formData.priority_id));
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -102,31 +149,38 @@ const CrudModal: React.FC<CrudModalProps> = ({
               className="login-input"
               placeholder="Nome do item"
               value={formData.name.toUpperCase()}
-              onChange={handleChange}
+              onChange={handleInputChange}
               autoFocus
             />
           </div>
 
           {showTimeLimitField && (
-            <div className="form-group">
-              <label>Limite de Tempo (em minutos)</label>
-              <input
-                type="number"
-                name="time_limit"
-                className="login-input"
-                placeholder="Ex: 60"
-                value={formData.time_limit}
-                onChange={handleChange}
-              />
-            </div>
+            <>
+              <div className="form-group">
+                <label>Limite de Tempo (em minutos)</label>
+                <input
+                  type="number"
+                  name="time_limit"
+                  className="login-input"
+                  placeholder="Ex: 60"
+                  value={formData.time_limit}
+                  onChange={handleInputChange}
+                />
+              </div>
+              <div className="form-group">
+                <label>Prioridade</label>
+                <StyledSelect
+                  options={priorityOptions}
+                  value={selectedPriority}
+                  onChange={handlePriorityChange}
+                  placeholder="Selecione..."
+                  isClearable
+                />
+              </div>
+            </>
           )}
         </div>
         <div className="modal-footer">
-          {showServicesButton && (
-            <button className="btn-secondary services-button" onClick={onServicesClick}>
-              <FaCog /> Serviços
-            </button>
-          )}
           <div style={{ flex: 1 }}></div>
           <button className="btn-cancel" onClick={onClose}>Cancelar</button>
           <button className="btn-confirm" onClick={handleSave} disabled={isSaveDisabled}>

@@ -86,7 +86,7 @@ const SelectCategory: React.FC = () => {
       <main className="configs-content">
         <Breadcrumb items={breadcrumbItems} />
         <div className="ticket-flow-header">
-          <h2 className='title'>CATÁLOGO DE SERVIÇOS</h2>
+          <h2 className='title'>CATEGORIAS</h2>
           <p className='sub-title'>Para começar, selecione a categoria do serviço que você precisa.</p>
         </div>
 

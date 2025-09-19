@@ -19,6 +19,7 @@ interface CrudItem {
   services?: { id: number, name: string }[];
   permissions?: { id: number, name: string }[];
   time_limit?: number;
+  priority_sla_relations?: number;
 }
 interface User {
   id: number;
@@ -33,16 +34,16 @@ interface SaveData {
 
 const TABS = [
   { key: 'priorities', label: 'Prioridades' },
+  { key: 'slas', label: 'SLA' },
   { key: 'form-of-services', label: 'Formas de Atendimento' },
   { key: 'form-of-requests', label: 'Formas de Solicitação' },
   { key: 'causes', label: 'Causa' },
   { key: 'queues', label: 'Filas' },
-  { key: 'states', label: 'Estados' },
+  { key: 'states', label: 'Status' },
   { key: 'departments', label: 'Departamentos' },
   { key: 'categories', label: 'Categorias' },
   { key: 'services', label: 'Serviços' },
   { key: 'roles', label: 'Funções' },
-  { key: 'slas', label: 'SLA' },
   { key: 'permissions', label: 'Permissões' }
 ];
 
@@ -312,8 +313,9 @@ const GlobalConfigs: React.FC = () => {
               <table className="data-table">
                 <thead>
                   <tr>
-                    {activeTab.key === 'slas' ? <th>Nome do Tempo</th> : <th>Nome</th>}
+                    {activeTab.key === 'slas' ? <th>Nome do SLA</th> : <th>Nome</th>}
                     {activeTab.key === 'slas' && <th>Limite de Tempo (min)</th>}
+                    {activeTab.key === 'slas' && <th>Prioridade</th>}
                     <th style={{ textAlign: 'center' }}>Ações</th>
                   </tr>
                 </thead>

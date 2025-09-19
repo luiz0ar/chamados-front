@@ -141,8 +141,16 @@
   transition: color 0.3s;
 }
 
+.action-button.services:hover {
+  color: rgb(0, 161, 86);
+}
+
+.action-button.permissions:hover {
+  color: rgb(0, 161, 86);
+}
+
 .action-button.edit:hover {
-  color: #5ea9ff;
+  color: rgb(0, 161, 86);
 }
 
 .action-button.delete:hover {

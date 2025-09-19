@@ -8,15 +8,17 @@ interface PriorityBadgeProps {
 const PriorityBadge: React.FC<PriorityBadgeProps> = ({ priorityName }) => {
   const getPriorityClass = (name: string) => {
     switch (name.toUpperCase()) {
-      case 'BAIXA':
+      case '0 - SEM':
+        return 'no-priority';
+      case '1 - BAIXA':
         return 'priority-low';
-      case 'MÉDIA':
+      case '2 - MÉDIA':
         return 'priority-medium';
-      case 'ALTA':
+      case '3 - ALTA':
         return 'priority-high';
-      case 'URGENTE':
+      case '4 - URGENTE':
         return 'priority-urgent';
-      case 'CRÍTICA':
+      case '5 - CRÍTICA':
         return 'priority-critical';
       default:
         return 'priority-default';

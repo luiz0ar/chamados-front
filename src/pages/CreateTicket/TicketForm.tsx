@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import type { SingleValue } from 'react-select';
 import { useNavigate, useParams } from 'react-router-dom';
 import Header from '../../Components/Header/Header';
 import Breadcrumb from '../../Components/Breadcrumb/Breadcrumb';
@@ -30,6 +31,10 @@ interface Priority {
   name: string;
 }
 
+type SelectOption = {
+  value: number;
+  label: string;
+}
 
 const TicketForm: React.FC = () => {
   const { categoryId, serviceId } = useParams<{ categoryId: string, serviceId: string }>();
@@ -41,9 +46,13 @@ const TicketForm: React.FC = () => {
   const [attachments, setAttachments] = useState<File[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [formData, setFormData] = useState({
+
+  const [formData, setFormData] = useState<{
+    description: string;
+    priority: number | null;
+  }>({
     description: '',
-    priority: 1,
+    priority: null,
   });
 
   useEffect(() => {
@@ -58,11 +67,17 @@ const TicketForm: React.FC = () => {
         ]);
 
         const serviceData: ServiceDetails = serviceRes.data;
+        const fetchedPriorities: Priority[] = prioritiesRes.data || [];
+
         setUser(meRes.data);
         setService(serviceData);
         setCategoryName(categoryRes.data.name);
-        setPriorities(prioritiesRes.data || []);
-        setFormData(prev => ({ ...prev, priority: serviceData.priority_id || 1 }));
+        setPriorities(fetchedPriorities);
+
+        const defaultPriority = fetchedPriorities.find(p => p.name === '0 - SEM');
+        const initialPriorityId = serviceData.priority_id || (defaultPriority ? defaultPriority.id : null);
+
+        setFormData(prev => ({ ...prev, priority: initialPriorityId }));
 
       } catch (error) {
         toast.error("Não foi possível carregar os dados para este chamado.");
@@ -77,13 +92,12 @@ const TicketForm: React.FC = () => {
     }
   }, [serviceId, categoryId, navigate]);
 
-  const handleFormChange = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleFormChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-
-  const handlePriorityChange = (selectedOption: any) => {
-    setFormData(prev => ({ ...prev, priority: selectedOption ? selectedOption.value : 1 }));
+  const handlePriorityChange = (selectedOption: SingleValue<SelectOption>) => {
+    setFormData(prev => ({ ...prev, priority: selectedOption ? selectedOption.value : null }));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -96,57 +110,61 @@ const TicketForm: React.FC = () => {
     setAttachments(prev => prev.filter(file => file !== fileToRemove));
   };
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!formData.description.trim()) {
-    toast.error("Por favor, preencha a descrição.");
-    return;
-  }
-  if (!user || !service) {
-    toast.error("Dados do usuário ou serviço não carregados. Tente novamente.");
-    return;
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.description.trim()) {
+      toast.error("Por favor, preencha a descrição.");
+      return;
+    }
+    if (!formData.priority) {
+      toast.error("Por favor, selecione uma prioridade.");
+      return;
+    }
+    if (!user || !service) {
+      toast.error("Dados do usuário ou serviço não carregados. Tente novamente.");
+      return;
+    }
 
-  setIsSaving(true);
+    setIsSaving(true);
 
-  const ticketPayload = {
-    states_id: 1,
-    services_id: service.id,
-    created_by: user.id,
-    departament_id: user.department_id,
-    slas_id: 1,
-    priority: formData.priority,
-    queue_id: 1,
-    form_of_request_id: 1,
-    sla_limited: true,
-    description: formData.description,
-  };
+    const ticketPayload = {
+      states_id: 1,
+      services_id: service.id,
+      created_by: user.id,
+      departament_id: user.department_id,
+      slas_id: 1,
+      priority: formData.priority,
+      queue_id: 1,
+      form_of_request_id: 1,
+      sla_limited: true,
+      description: formData.description,
+    };
 
-  const dataToSubmit = new FormData();
-  Object.entries(ticketPayload).forEach(([key, value]) => {
-    dataToSubmit.append(key, String(value));
-  });
-
-  attachments.forEach(file => {
-    dataToSubmit.append('attachments[]', file);
-  });
-
-  try {
-    await api.post('/tickets', dataToSubmit, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
+    const dataToSubmit = new FormData();
+    Object.entries(ticketPayload).forEach(([key, value]) => {
+      dataToSubmit.append(key, String(value));
     });
 
-    toast.success("Chamado aberto com sucesso!");
-    navigate('/gestao-chamados');
-  } catch (error) {
-    console.error("Erro ao abrir chamado:", error);
-    toast.error("Não foi possível abrir o chamado. Verifique o console para mais detalhes.");
-  } finally {
-    setIsSaving(false);
-  }
-};
+    attachments.forEach(file => {
+      dataToSubmit.append('attachments[]', file);
+    });
+
+    try {
+      await api.post('/tickets', dataToSubmit, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      toast.success("Chamado aberto com sucesso!");
+      navigate('/gestao-chamados');
+    } catch (error) {
+      console.error("Erro ao abrir chamado:", error);
+      toast.error("Não foi possível abrir o chamado. Verifique o console para mais detalhes.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const breadcrumbItems = [
     { label: 'INÍCIO', path: '/inicio' },
@@ -159,7 +177,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     return <LoadingScreen />;
   }
 
-  const priorityOptions = priorities.map(p => ({ value: p.id, label: p.name }));
+  const priorityOptions: SelectOption[] = priorities.map(p => ({ value: p.id, label: p.name }));
   const selectedPriority = priorityOptions.find(p => p.value === formData.priority) || null;
 
   return (

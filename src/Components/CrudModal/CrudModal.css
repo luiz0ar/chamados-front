@@ -84,7 +84,6 @@
 }
 
 .btn-services-button:hover {
-  border: 1px solid rgba(100, 150, 255, 1);
-  color: rgba(100, 150, 255);
+  border: 1px solid rgb(0, 161, 86);
+  color: rgb(0, 161, 86);
 }
-

@@ -10,6 +10,7 @@ import TicketManagement from '../pages/TicketManagement/TicketManagement';
 import SelectCategory from '../pages/CreateTicket/SelectCategory';
 import SelectService from '../pages/CreateTicket/SelectService';
 import TicketForm from '../pages/CreateTicket/TicketForm';
+import ViewTicket from '../pages/ViewTicket/ViewTicket';
 
 export const AppRoutes = () => {
   return (
@@ -25,6 +26,7 @@ export const AppRoutes = () => {
       <Route path="/novo-chamado" element={<SelectCategory />} />
       <Route path="/novo-chamado/:categoryId" element={<SelectService />} />
       <Route path="/novo-chamado/:categoryId/:serviceId" element={<TicketForm />} />
+      <Route path="chamado/:id" element={<ViewTicket />} />
       <Route path="*" element={<Login />} />
     </Routes>
   );

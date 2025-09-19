@@ -25,7 +25,6 @@
   color: white;
 }
 
-
 .btn-confirm {
   flex: 1;
   padding: 10px;
@@ -59,7 +58,6 @@
   cursor: not-allowed;
   color: white;
 }
-
 
 .btn-cancel {
   flex: 1;
